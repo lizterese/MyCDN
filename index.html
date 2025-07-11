@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Journey of Malinche</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a;
+            color: #f0e7d8;
+        }
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        .choice-button, .feedback-button {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+        .choice-button:hover, .feedback-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        }
+        .glass-panel {
+            background: rgba(26, 26, 26, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-cover bg-center bg-fixed" style="background-image: url('https://placehold.co/1920x1080/1a1a1a/333333?text=Ancient+Mesoamerica');">
+
+    <div id="game-container" class="min-h-screen p-4 md:p-8 flex flex-col items-center justify-center">
+        <!-- App content will be rendered here by JavaScript -->
+    </div>
+
+    <script>
+        // --- GAME STATE ---
+        const gameState = {
+            attributes: { strength: 0, loyalty: 0, wisdom: 0 },
+            allegiance: null, // 'spaniards' or 'indigenous'
+            currentStage: 0,
+            log: [],
+            isFeedbackScreen: false,
+            lastChoiceResult: null
+        };
+
+        // --- GAME CONTENT ---
+        // Challenge narratives have been fleshed out to align with choices.
+        const stages = [
+            // Stage 0: Allegiance
+            {
+                title: "The First Choice",
+                location: "Villa Rica de la Vera Cruz",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7519.972655519896!2d-96.1557168!3d19.5428619!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85db2c0a9e278631%3A0x3c7cf4c173e6396b!2sLa%20Antigua%2C%20Ver.!5e1!3m2!1sen!2sus",
+                narrative: `You stand on the coast, the air thick with salt and the unknown. The ships of the Spaniards are symbols of a new, impossible power. You have seen their steel and heard their cannons. You have also seen the splintered factions of your own world, where the Mexica of Tenochtitlan demand tribute and sacrifice. Cortés has recognized your value. You must decide who you are in this story.`,
+                question: "Where does your true loyalty lie?",
+                choices: [
+                    { text: "For the Spaniards. Their power is the only path to breaking the Mexica and securing a future.", allegiance: 'spaniards' },
+                    { text: "For the Indigenous Peoples. These are your people. You will use your position to protect and guide them.", allegiance: 'indigenous' }
+                ]
+            },
+            // Stage 1: Test of Strength
+            {
+                title: "Challenge 1: The Test of Strength",
+                location: "Pass between Pico de Orizaba & Cofre de Perote",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d59943.48316281084!2d-97.23432704179687!3d19.29413689999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85c53b1b3a3d3e6d%3A0x23df890b2792ecc8!2sPico%20de%20Orizaba!5e1!3m2!1sen!2sus",
+                narrative: "The army leaves the coast, reinforced by hundreds of Totonac warriors from Cempoala, their first native allies. As you ascend into the mountains, the landscape turns hostile. A freezing rain begins to fall, and the air thins. The Spaniards, clad in steel and wool, shiver and curse. But the Totonacs, used to the humid lowlands and wearing only thin cotton, begin to falter, their bodies succumbing to the brutal cold. A group of Spanish soldiers, impatient with the slowing pace, asks you to guide them on a shortcut you mentioned. It looks treacherous, but it could get them out of this icy hell sooner. Your own strength is failing, and you must choose where to focus your remaining energy.",
+                question: "What do you do?",
+                choices: { 
+                    spaniards: [
+                        { text: "Take command of the scouting party. This is a chance to prove you are more than a translator. By leading them through the dangerous pass, you demonstrate that your strength and knowledge of the land are as valuable as their steel.", effect: { attribute: 'strength', value: 2 }, feedback: "You lead them through the treacherous shortcut. You are exhausted but victorious. The soldiers now look at you with a new respect; you are not just a voice, but a force. You have cemented your value." },
+                        { text: "Decline, citing the extreme risk. You explain that your primary value is as an interpreter for Cortés, and risking your life on a reckless venture would endanger the entire expedition. This is a calculated act of self-preservation.", effect: { attribute: 'strength', value: -2 }, feedback: "You refuse the risk. While logical, the soldiers mutter that you lack courage. Your influence with the common soldier wanes, as they now see you as someone who preaches caution from a position of comfort." },
+                        { text: "Endure with the main column. You refuse to separate from Cortés. You will share the fate of the army, for better or worse, enduring the hardship with quiet stoicism and observing everything.", effect: { attribute: null, value: 0 }, feedback: "You remain with the main force, enduring the brutal cold. You gain no special glory, but your steadfast presence does not go unnoticed by Cortés. You have chosen the path of observation and survival." }
+                    ],
+                    indigenous: [
+                        { text: "Lead the party to protect your people. You accept, but your focus is on guiding the suffering Totonac allies alongside the Spanish. You show them where to find shelter from the wind and how to pace themselves, using your strength for their survival.", effect: { attribute: 'strength', value: 2 }, feedback: "You guide the party, focusing your energy on aiding the struggling Totonacs. Many owe you their lives. Your reputation as a leader among your own people grows immensely." },
+                        { text: "Refuse the shortcut to aid the fallen. You tell the soldiers the shortcut is too dangerous, choosing instead to fall back and tend to the Totonacs who are sick and freezing. You cannot save them all, but you will not abandon them.", effect: { attribute: 'strength', value: -2 }, feedback: "You defy the soldiers' request to help your people. While a noble act, your refusal to aid the 'more important' members of the expedition is seen as insubordination and weakness by the Spanish command. Your influence suffers." },
+                        { text: "Share the common fate. You remain with the main group, sharing in the misery of Totonac and Spaniard alike. You offer what quiet comfort you can, acting as a silent bridge of shared suffering between the two cultures.", effect: { attribute: null, value: 0 }, feedback: "You endure the hardship with everyone. You have not distinguished yourself, but you have shown solidarity. You are seen as a constant, reliable presence in a world of chaos." }
+                    ]
+                }
+            },
+            // Stage 2: Test of Loyalty
+            {
+                title: "Challenge 2: The Test of Loyalty",
+                location: "Cholula, The Great City",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30291.46788863619!2d-98.3275726217163!3d19.063234900000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85cfc89ff758d4bd%3A0x6003781ad2b8105c!2sGreat%20Pyramid%20of%20Cholula!5e1!3m2!1sen!2sus",
+                narrative: "You arrive in Cholula, a major city loyal to the Mexica and their great god Quetzalcoatl. The welcome is superficially grand, but you feel a tension in the air. The smiles of the priests are masks, and the warriors in the market watch you with hard eyes. That night, an elderly Cholulan woman who has taken a liking to you confirms your fears. She pulls you aside, revealing a plot: the warriors plan to trap and massacre the Spanish in the city's narrow streets as they depart. She believes the plot is madness and urges you to flee with her. You now hold the fate of the expedition—and the city—in your hands.",
+                question: "What do you do?",
+                choices: {
+                    spaniards: [
+                        { text: "Inform Cortés with strategic advice. You immediately go to Cortés, detailing the plot. You use your understanding of the city's layout to suggest how he can turn the ambush into a trap of his own, cementing your role as his indispensable advisor.", effect: { attribute: 'loyalty', value: 2 }, feedback: "Cortés follows your counsel. The resulting massacre is brutal, but the Spanish expedition is saved. Your loyalty is absolute, and your position of power is now unquestioned. The blood of Cholula is on your hands." },
+                        { text: "Risk everything to warn the Cholulans. Seeing the faces in the market, you cannot condemn them. You find a way to send a cryptic message to the Cholulan leaders, a warning of betrayal from within their own ranks, hoping they abandon the plot.", effect: { attribute: 'loyalty', value: -2 }, feedback: "Your warning is either not received or not believed. The ambush proceeds and is crushed. Cortés learns of your betrayal. Your life is spared only because you are too valuable, but you are now watched constantly. You have saved no one." },
+                        { text: "Present the information as a rumor. You tell Cortés, 'An old woman, perhaps a liar, told me of a plot.' You provide the facts but couch them in uncertainty, forcing Cortés to make the final judgment. You give him the knife, but his hand must guide it.", effect: { attribute: null, value: 0 }, feedback: "Cortés, ever suspicious, acts on the 'rumor' and strikes first. You have avoided direct responsibility, a wise political move. But in your heart, you know your careful words were a death sentence." }
+                    ],
+                    indigenous: [
+                        { text: "Devise a plan to warn the Cholulan leaders. You use your unique position to get a message to the war chiefs, warning them that the Spanish are aware of a plot. You advise them to welcome Cortés with open arms to prove the rumor false and save their city.", effect: { attribute: 'loyalty', value: 2 }, feedback: "The leaders heed your warning. They disperse their warriors and welcome the Spanish, averting disaster. You have successfully used your influence to save thousands, a dangerous but triumphant act of loyalty to your people." },
+                        { text: "Sacrifice Cholula for the 'greater good.' You tell Cortés, hardening your heart. These Cholulans are allied with the Mexica, your oppressors. A brutal Spanish victory here might convince other cities to join the rebellion, ultimately saving more lives than are lost today.", effect: { attribute: 'loyalty', value: -2 }, feedback: "The massacre at Cholula happens as you foresaw. The horror of it sends shockwaves through the land, and many cities rush to ally with the Spanish out of fear. You have played a terrible game, and a piece of your soul is the price." },
+                        { text: "Use the rumor to test the Spanish. You tell Cortés about the plot, curious to see the extent of his ruthlessness. You need to know if these foreigners are liberators or merely new masters. You observe his reaction with cold detachment.", effect: { attribute: null, value: 0 }, feedback: "You watch as Cortés unleashes a brutal preemptive strike. You now have your answer: his capacity for violence is boundless. This knowledge is valuable, but it does nothing to change the fate of the city." }
+                    ]
+                }
+            },
+            // Stage 3: Test of Wisdom
+            {
+                title: "Challenge 3: The Test of Wisdom",
+                location: "Tlaxcala, City of the Eagle Clan",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d29948.9045588114!2d-98.25895312061766!3d19.3155827!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85cfd0037e21a5c7%3A0x4ab2c53181827435!2sTlaxcala%20City%2C%20Tlaxcala!5e1!3m2!1sen!2sus",
+                narrative: "After surviving fierce battles with the Tlaxcalans, Cortés has negotiated a tense peace. You now enter their city, a bastion of warriors who have resisted the Mexica for generations. News of the massacre at Cholula has reached them, and they are deeply divided. Some see the Spanish as monstrous, while others see them as the weapon they need to finally crush their hated enemies. Cortés knows this alliance is critical for supplies and soldiers. He brings you before the council of lords, not just to translate, but to speak to them. Your words can forge this crucial alliance or shatter it forever.",
+                question: "How do you address them?",
+                choices: {
+                    spaniards: [
+                        { text: "Speak of a shared destiny. You weave their hatred of the Mexica with a vision of a new world. You tell them that the Spanish are the fulfillment of a prophecy, the instrument of their liberation and future glory. You appeal to their ambition.", effect: { attribute: 'wisdom', value: 2 }, feedback: "Your words resonate with the Tlaxcalan lords. You have given them a grand justification for their pragmatic desires. The alliance is forged in steel and hope, thanks to your wisdom." },
+                        { text: "Use fear as a weapon. You plainly describe the fate of Cholula and other cities that have resisted. You make it clear that the Spanish are an unstoppable force of nature, and to stand against them is to be washed away.", effect: { attribute: 'wisdom', value: -2 }, feedback: "The Tlaxcalans agree to the alliance, but their eyes are cold. You have secured their arms, but not their hearts. This foundation of fear is a brittle one that could shatter under pressure." },
+                        { text: "Perform the role of a perfect translator. You refuse to give your own counsel, stating your duty is only to translate. You flawlessly convey the words and passion of Cortés, letting his own arguments win or lose the day.", effect: { attribute: null, value: 0 }, feedback: "Cortés, through his own forceful rhetoric, convinces the Tlaxcalans. You have performed your duty perfectly, but have given up an opportunity to shape the future with your own wisdom. You were a tool, not an architect." }
+                    ],
+                    indigenous: [
+                        { text: "Advise them to use the Spanish as a weapon. You speak to the Tlaxcalan lords, not of alliance, but of utility. 'A wild jaguar can be a danger,' you say, 'but if you can aim it at your enemies' camp, it is a useful thing.' You show them how to use the Spanish to destroy the Mexica.", effect: { attribute: 'wisdom', value: 2 }, feedback: "The lords see the wisdom in your cunning. They will not be servants, but puppet masters. The alliance is formed on the basis of mutual exploitation, a far stronger bond than trust." },
+                        { text: "Plead for them to see the true danger. You speak with passion, urging them to see that the Spanish are a greater threat than the Mexica. You ask them to look past old hatreds to face the storm that will consume everyone.", effect: { attribute: 'wisdom', value: -2 }, feedback: "Your plea is seen as naive idealism. Their hatred for the Mexica is a fire that has burned for generations, and they will not give up this chance for revenge. You have misjudged the depths of their history and lost credibility." },
+                        { text: "Subtly undermine Cortés through translation. You translate Cortés's words accurately, but you choose Nahuatl words with double meanings, adding shades of arrogance and disrespect that only the Tlaxcalans would perceive. You appear loyal while planting seeds of doubt.", effect: { attribute: null, value: 0 }, feedback: "The Tlaxcalans agree to the alliance, but your subtle work has ensured they remain deeply suspicious of Cortés. You have not prevented the alliance, but you have weakened its foundation from the start, a quiet act of sabotage." }
+                    ]
+                }
+            },
+            // Stage 4: Epilogue
+            {
+                title: "The Causeway to Tenochtitlan",
+                location: "Tenochtitlan (Modern Mexico City Zocalo)",
+                mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3762.533839352984!2d-99.13539868509335!3d19.4326077868846!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d1f935313a2583%3A0x7e3f360e8e663a0a!2sZ%C3%B3calo!5e1!3m2!1sen!2sus",
+                narrative: "You have arrived. The great causeway stretches before you, leading to the island metropolis of Tenochtitlan, a jewel in the lake. Your journey has shaped you, and your choices will echo in the history that is about to be written.",
+                question: "Your journey has concluded. Reflect on your path.",
+                choices: [{ text: "Begin a new journey.", restart: true }]
+            }
+        ];
+
+        // --- HELPER FUNCTIONS ---
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // --- CORE GAME FUNCTIONS ---
+
+        function init() {
+            gameState.attributes = { strength: 0, loyalty: 0, wisdom: 0 };
+            gameState.allegiance = null;
+            gameState.currentStage = 0;
+            gameState.log = [];
+            gameState.isFeedbackScreen = false;
+            gameState.lastChoiceResult = null;
+
+            let points = 20;
+            const attrs = ['strength', 'loyalty', 'wisdom'];
+            while (points > 0) {
+                let attrIndex = Math.floor(Math.random() * 3);
+                gameState.attributes[attrs[attrIndex]]++;
+                points--;
+            }
+            render();
+        }
+
+        function handleChoice(choiceData) {
+            if (choiceData.restart) {
+                init();
+                return;
+            }
+
+            if (gameState.currentStage === 0) {
+                gameState.allegiance = choiceData.allegiance;
+                gameState.log.push(`You chose to align with the ${gameState.allegiance === 'spaniards' ? 'Spaniards' : 'Indigenous Peoples'}.`);
+                proceedToNextStage();
+                return;
+            }
+            
+            const { attribute, value } = choiceData.effect;
+            let pointChangeText = "Your attributes remain unchanged.";
+            if (attribute) {
+                const oldValue = gameState.attributes[attribute];
+                gameState.attributes[attribute] = Math.max(0, oldValue + value);
+                const change = value > 0 ? `increased` : `decreased`;
+                pointChangeText = `Your <strong>${attribute}</strong> has ${change} from ${oldValue} to ${gameState.attributes[attribute]}.`;
+            }
+
+            gameState.lastChoiceResult = {
+                feedback: choiceData.feedback,
+                pointChangeText: pointChangeText
+            };
+            
+            gameState.log.push(choiceData.feedback);
+            gameState.isFeedbackScreen = true;
+            render();
+        }
+
+        function proceedToNextStage() {
+            gameState.isFeedbackScreen = false;
+            gameState.lastChoiceResult = null;
+            gameState.currentStage++;
+            render();
+        }
+
+        function render() {
+            const container = document.getElementById('game-container');
+            const stage = stages[gameState.currentStage];
+
+            if (gameState.isFeedbackScreen) {
+                container.innerHTML = `
+                    <div class="glass-panel rounded-xl shadow-2xl w-full max-w-3xl p-6 md:p-8 flex flex-col items-center">
+                        <h2 class="font-cinzel text-2xl md:text-3xl text-amber-200 mb-4">Outcome</h2>
+                        <div class="text-center space-y-4 text-gray-300">
+                            <p class="leading-relaxed">${gameState.lastChoiceResult.feedback}</p>
+                            <p class="text-lg font-bold text-white bg-black/30 p-3 rounded-lg">${gameState.lastChoiceResult.pointChangeText}</p>
+                        </div>
+                        <button onclick="proceedToNextStage()" class="feedback-button mt-8 w-full max-w-xs p-3 rounded-lg bg-amber-700 hover:bg-amber-600 text-white font-bold tracking-wider">Continue</button>
+                    </div>
+                `;
+                return;
+            }
+
+            let attributesHtml = '';
+            if (gameState.currentStage > 0 && gameState.currentStage < 5) {
+                 attributesHtml = `<div class="w-full flex justify-center gap-4 md:gap-8 mb-4 text-center">
+                        <div><p class="font-cinzel text-sm md:text-lg tracking-wider">STRENGTH</p><p class="text-2xl md:text-4xl font-bold">${gameState.attributes.strength}</p></div>
+                        <div><p class="font-cinzel text-sm md:text-lg tracking-wider">LOYALTY</p><p class="text-2xl md:text-4xl font-bold">${gameState.attributes.loyalty}</p></div>
+                        <div><p class="font-cinzel text-sm md:text-lg tracking-wider">WISDOM</p><p class="text-2xl md:text-4xl font-bold">${gameState.attributes.wisdom}</p></div>
+                    </div>`;
+            }
+
+            let finalSummaryHtml = '';
+            if (gameState.currentStage === 4) {
+                finalSummaryHtml = `<div class="mb-6 p-4 border border-gray-600 rounded-lg bg-black/30">
+                        <h3 class="font-cinzel text-xl mb-3 text-center text-amber-300">The Chronicle of Your Journey</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-300">${gameState.log.map(entry => `<li>${entry}</li>`).join('')}</ul>
+                        <div class="mt-4 text-center font-bold text-lg">
+                            <p>Final Attributes: Strength ${gameState.attributes.strength}, Loyalty ${gameState.attributes.loyalty}, Wisdom ${gameState.attributes.wisdom}</p>
+                            <p>Final Allegiance: ${gameState.allegiance === 'spaniards' ? 'The Spanish Crown' : 'The Indigenous Peoples'}</p>
+                        </div>
+                    </div>`;
+            }
+            
+            const mapHtml = stage.mapUrl ? `<div class="h-64 lg:h-full min-h-[300px]">
+                            <iframe width="100%" height="100%" style="border:0;" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade" src="${stage.mapUrl}"></iframe>
+                        </div>` : `<div class="hidden lg:block"></div>`;
+
+
+            container.innerHTML = `<div class="glass-panel rounded-xl shadow-2xl w-full max-w-6xl overflow-hidden">
+                    <div class="grid grid-cols-1 ${stage.mapUrl ? 'lg:grid-cols-2' : 'lg:grid-cols-1'}">
+                        <div class="p-6 md:p-8 flex flex-col">
+                            <h1 class="font-cinzel text-2xl md:text-4xl font-bold text-amber-200 mb-2">${stage.title}</h1>
+                            ${stage.location ? `<p class="text-sm text-gray-400 mb-4 font-semibold tracking-wide uppercase">${stage.location}</p>` : ''}
+                            ${attributesHtml}
+                            <div class="flex-grow text-gray-300 space-y-4 leading-relaxed">
+                                <p>${stage.narrative}</p>
+                                ${finalSummaryHtml}
+                                <p class="font-bold text-amber-100 mt-4">${stage.question}</p>
+                            </div>
+                            <div id="choices-container" class="mt-6 space-y-3"></div>
+                        </div>
+                        ${mapHtml}
+                    </div>
+                </div>`;
+            
+            const choicesContainer = document.getElementById('choices-container');
+            let currentChoices = [];
+            if (gameState.currentStage === 0 || gameState.currentStage === 4) {
+                currentChoices = stage.choices;
+            } else {
+                currentChoices = stage.choices[gameState.allegiance];
+            }
+
+            const shuffledChoices = shuffleArray([...currentChoices]);
+            shuffledChoices.forEach(choice => {
+                const button = document.createElement('button');
+                button.innerHTML = choice.text;
+                button.className = "choice-button w-full text-left p-4 rounded-lg bg-gray-700 hover:bg-amber-800 text-white font-medium border border-gray-600";
+                button.onclick = () => handleChoice(choice);
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        // --- START GAME ---
+        window.onload = init;
+    </script>
+</body>
+</html>
