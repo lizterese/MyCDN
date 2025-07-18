@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stat Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and general body styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f4f8; /* Light gray background */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        /* Ensure the main container is responsive */
+        .container {
+            max-width: 500px; /* Limit max width */
+            width: 100%; /* Full width on smaller screens */
+        }
+        /* Style for buttons */
+        .stat-button {
+            @apply bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105;
+        }
+        .send-button {
+            @apply bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="container bg-white p-8 rounded-xl shadow-2xl space-y-6 border border-gray-200">
+        <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-6">Character Stats</h1>
+
+        <!-- Stat Display Section -->
+        <div class="flex flex-col space-y-4">
+            <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg shadow-sm border border-purple-200">
+                <span class="text-lg font-semibold text-gray-700">Strength:</span>
+                <span id="strengthValue" class="text-xl font-bold text-purple-700">0</span>
+                <button id="increaseStrength" class="stat-button">Increase</button>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg shadow-sm border border-green-200">
+                <span class="text-lg font-semibold text-gray-700">Wisdom:</span>
+                <span id="wisdomValue" class="text-xl font-bold text-green-700">0</span>
+                <button id="increaseWisdom" class="stat-button">Increase</button>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg shadow-sm border border-red-200">
+                <span class="text-lg font-semibold text-gray-700">Loyalty:</span>
+                <span id="loyaltyValue" class="text-xl font-bold text-red-700">0</span>
+                <button id="increaseLoyalty" class="stat-button">Increase</button>
+            </div>
+        </div>
+
+        <!-- Send Button -->
+        <div class="mt-8 text-center">
+            <button id="sendStats" class="send-button">Send Updated Stats</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize stat variables
+        let strength = 0;
+        let wisdom = 0;
+        let loyalty = 0;
+
+        /**
+         * Parses the URL query string to extract initial stat values.
+         * If values are not found or invalid, they default to 0.
+         */
+        function parseQueryString() {
+            const params = new URLSearchParams(window.location.search);
+            strength = parseInt(params.get('strength')) || 0;
+            wisdom = parseInt(params.get('wisdom')) || 0;
+            loyalty = parseInt(params.get('loyalty')) || 0;
+        }
+
+        /**
+         * Updates the displayed values on the HTML page.
+         */
+        function updateDisplay() {
+            document.getElementById('strengthValue').textContent = strength;
+            document.getElementById('wisdomValue').textContent = wisdom;
+            document.getElementById('loyaltyValue').textContent = loyalty;
+        }
+
+        /**
+         * Sends the current stat values back to the parent window
+         * using postMessage.
+         */
+        function sendStatsToParent() {
+            // Check if the window has a parent (i.e., it's in an iframe)
+            if (window.parent) {
+                // Post a message to the parent window with the updated stats
+                // The targetOrigin '*' means any origin is allowed.
+                // In a production environment, you should specify the exact origin
+                // of the parent window for security reasons (e.g., 'https://yourparentdomain.com').
+                window.parent.postMessage({
+                    type: 'statsUpdate', // A type to identify the message
+                    strength: strength,
+                    wisdom: wisdom,
+                    loyalty: loyalty
+                }, '*');
+            } else {
+                console.warn("This page is not running inside an iframe. Cannot send message to parent.");
+                // Optionally, display a message to the user if not in an iframe
+                alert("Stats updated, but not running in an iframe. Check console for details.");
+            }
+        }
+
+        // Event Listeners for buttons
+        document.getElementById('increaseStrength').addEventListener('click', () => {
+            strength++;
+            updateDisplay();
+        });
+
+        document.getElementById('increaseWisdom').addEventListener('click', () => {
+            wisdom++;
+            updateDisplay();
+        });
+
+        document.getElementById('increaseLoyalty').addEventListener('click', () => {
+            loyalty++;
+            updateDisplay();
+        });
+
+        document.getElementById('sendStats').addEventListener('click', sendStatsToParent);
+
+        // Initial setup when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            parseQueryString(); // Get initial values from URL
+            updateDisplay();   // Display them
+        });
+    </script>
+</body>
+</html>
