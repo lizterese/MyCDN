@@ -95,6 +95,7 @@
          * using postMessage.
          */
         function sendStatsToParent() {
+            console.log(window.parent)
             // Check if the window has a parent (i.e., it's in an iframe)
             if (window.parent) {
                 // Post a message to the parent window with the updated stats
